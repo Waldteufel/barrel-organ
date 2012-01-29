@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
 
             switch (line[j]) {
                case '$': // sine
-                  s += 4 * sin(freq * t);
+                  s += 2 * sin(freq * t);
                   break;
 
                case '*': // triangle
