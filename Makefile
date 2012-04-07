@@ -6,4 +6,4 @@ barrel-organ: main.o
 .PHONY: play
 
 play: barrel-organ
-	./barrel-organ | play -r 11025 -b 32 -e float -t raw -
+	./barrel-organ | aplay -r 11025 -f FLOAT_LE -
