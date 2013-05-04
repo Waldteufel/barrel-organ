@@ -6,4 +6,4 @@ barrel-organ: main.o
 .PHONY: play
 
 play: barrel-organ
-	./barrel-organ | aplay -r 11025 -f FLOAT_LE -
+	./barrel-organ | paplay --rate=11025 --format=float32le --channels=1 --raw
