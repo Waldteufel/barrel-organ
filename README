@@ -1,3 +1,7 @@
 run with
 
-   make play <roll1.txt
+   make play-pulse <roll1.txt
+
+or
+
+   make play-alsa <roll1.txt
