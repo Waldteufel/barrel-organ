@@ -9,4 +9,4 @@ play-pulse: barrel-organ
 	./barrel-organ | paplay --rate=11025 --format=float32le --channels=1 --raw
 
 play-alsa: barrel-organ
-	./barrel-organ | aplay --rate=12025 --channels=1 -f FLOAT_LE
+	./barrel-organ | aplay --rate=11025 --channels=1 -f FLOAT_LE
