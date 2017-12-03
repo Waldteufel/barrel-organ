@@ -1,6 +1,8 @@
-#include <stdio.h>
-#include <string.h>
 #include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
 
 #define RATE 11025
 #define FRAC 5
@@ -12,6 +14,7 @@ char line[LINE_LEN];
 float buffer[BUF_LEN];
 
 int main(int argc, char **argv) {
+   srand(time(NULL));
    while (fgets(line, LINE_LEN, stdin)) {
       if (line[0] == '#') {
          memset(line, 0, LINE_LEN);
@@ -41,6 +44,10 @@ int main(int argc, char **argv) {
 
                case '%': // square
                   s += copysign(1.0, sin(freq * t)) / 4;
+                  break;
+
+               case '/': // noise
+                  s += (50.0 / freq) * (fmod(rand(), 2.0));
                   break;
             }
          }
