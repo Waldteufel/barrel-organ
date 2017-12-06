@@ -9,7 +9,7 @@ fn gen_sample(t: f64, j: usize, c: char) -> f64 {
 
     match c {
         '$' => 2.0 * f64::sin(freq * t),
-        '*' => 2.0 * f64::abs(2.0 - (t * freq/FRAC_PI_2) % 4.0) - 1.0,
+        '*' => f64::abs(2.0 - (t * freq/FRAC_PI_2) % 4.0) - 1.0,
         '+' => ((t * freq/PI) % 2.0 - 1.0) / 4.0,
         '%' => f64::signum(f64::sin(freq * t)) / 4.0,
         '/' => (50.0 / freq) * ((random::<u32>() % 2) as f64),
