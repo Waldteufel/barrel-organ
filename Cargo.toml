@@ -1,0 +1,7 @@
+[package]
+name = "barrel-organ"
+version = "0.1.0"
+authors = ["Benjamin Richter <br@waldteufel.eu>"]
+readme = "README"
+license = "MIT"
+publish = false
