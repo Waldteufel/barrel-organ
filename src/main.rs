@@ -1,6 +1,8 @@
+extern crate rand;
 use std::io::{self, BufRead, Write};
 use std::{f64, slice};
 use std::f64::consts::{PI, FRAC_PI_2};
+use rand::random;
 
 fn gen_sample(t: f64, j: usize, c: char) -> f64 {
     let freq = 110.0 * f64::powf(2.0, (j as f64) / 12.0);
@@ -10,6 +12,7 @@ fn gen_sample(t: f64, j: usize, c: char) -> f64 {
         '*' => 2.0 * f64::abs(2.0 - (t * freq/FRAC_PI_2) % 4.0) - 1.0,
         '+' => ((t * freq/PI) % 2.0 - 1.0) / 4.0,
         '%' => f64::signum(f64::sin(freq * t)) / 4.0,
+        '/' => (50.0 / freq) * ((random::<u32>() % 2) as f64),
         _ => 0.0
     }
 }
