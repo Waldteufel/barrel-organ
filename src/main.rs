@@ -29,6 +29,12 @@ impl<T> WriteFloats for T where T: Write {
 }
 
 fn main() {
+    let rate = 11025.0;
+    let default_bpm = 150.0;
+    let beat: f64 = 1.0/4.0;
+    let quantization: f64 = 1.0/8.0;
+    let quarter_subdivisions = (quantization.recip().log2() - beat.recip().log2()) as i32;
+
     let matches = App::new("barrel-organ")
         .arg(Arg::with_name("bpm")
             .short("b")
@@ -40,14 +46,9 @@ fn main() {
 
     let mut bpm = matches
         .value_of("bpm")
-        .unwrap_or("150")
+        .unwrap_or(&default_bpm.to_string())
         .parse::<f64>()
         .unwrap();
-
-    let rate = 11025.0;
-    let beat: f64 = 1.0/4.0;
-    let quantization: f64 = 1.0/8.0;
-    let quarter_subdivisions = (quantization.recip().log2() - beat.recip().log2()) as i32;
 
     let stdin = io::stdin();
     let stdout = io::stdout();
@@ -55,8 +56,8 @@ fn main() {
     let stdin_h = stdin.lock();
     let mut stdout_h = stdout.lock();
 
-    let first_tempo = bpm;
-    let mut composer_tempo = f64::NAN;
+    let bpm_override = bpm;
+    let mut composer_bpm = f64::NAN;
     let mut gt = 0.0;
 
     for line in stdin_h.lines() {
@@ -69,39 +70,44 @@ fn main() {
         if line.starts_with("#") {
             continue;
         }
-        if line.starts_with("!") {
-            let mut run_command = |command: &str| {
-                let parts = command
-                    .split(" ")
-                    .filter(|&x| !x.is_empty())
-                    .collect::<Vec<&str>>();
-                match parts.first() {
-                    Some(&name) => {
-                        match name {
-                            "bpm" => {
-                                let args = &parts[1..];
-                                if args.is_empty() {
-                                    eprintln!("Missing tempo.");
+        else if line.starts_with("!") {
+            let command = &line[1..];
+            let parts = command
+                .split(" ")
+                .filter(|&x| !x.is_empty())
+                .collect::<Vec<&str>>();
+            match parts.first() {
+                Some(&name) => {
+                    match name {
+                        "bpm" => {
+                            let args = &parts[1..];
+                            if args.is_empty() {
+                                eprintln!("Missing tempo.");
+                            }
+                            else {
+                                let new_bpm = args[0].parse::<f64>().unwrap();
+                                if composer_bpm.is_nan() {
+                                    composer_bpm = new_bpm;
+                                    if bpm_override == default_bpm {
+                                        bpm = new_bpm;
+                                    }
                                 }
                                 else {
-                                    let tempo = args[0].parse::<f64>().unwrap();
-                                    if composer_tempo.is_nan() {
-                                        composer_tempo = tempo;
-                                    }
-                                    else {
-                                        let change_rate = tempo / composer_tempo;
-                                        bpm = first_tempo * change_rate;
-                                    }
+                                    let change_rate = new_bpm / composer_bpm;
+                                    bpm = bpm_override * change_rate;
                                 }
-                            },
-                            _ => eprintln!("Ignoring unknown command: \"{}\"", &name)
-                        }
-                    },
-                    _ => eprintln!("Ignoring empty command")
-                }
+                            }
+                        },
+                        _ => eprintln!("Ignoring unknown command: \"{}\"", &name)
+                    }
+                },
+                _ => eprintln!("Ignoring empty command")
             };
-            run_command(&line[1..]);
             continue;
+        }
+        else if composer_bpm.is_nan() {
+            /* this covers cases where the initial tempo is missing, and only later changes in tempo exist */
+            composer_bpm = default_bpm;
         }
         for i in 0..buf_len {
             let t = gt + (i as f64) * 2.0 * PI/rate;  // arrr!
