@@ -38,7 +38,7 @@ fn main() {
             .takes_value(true))
         .get_matches();
 
-    let bpm = matches
+    let mut bpm = matches
         .value_of("bpm")
         .unwrap_or("150")
         .parse::<f64>()
@@ -48,8 +48,6 @@ fn main() {
     let beat: f64 = 1.0/4.0;
     let quantization: f64 = 1.0/8.0;
     let quarter_subdivisions = (quantization.recip().log2() - beat.recip().log2()) as i32;
-    let buf_len = (rate/bpm*60.0/f64::powi(2.0, quarter_subdivisions)) as usize;
-    let frac = rate/(buf_len as f64);
 
     let stdin = io::stdin();
     let stdout = io::stdout();
@@ -58,11 +56,44 @@ fn main() {
     let mut stdout_h = stdout.lock();
 
     let mut gt = 0.0;
-    let mut buf = vec![0.0 as f32; buf_len];
 
     for line in stdin_h.lines() {
         /* for each input line, output buf_len samples */
+        let buf_len = (rate/bpm*60.0/f64::powi(2.0, quarter_subdivisions)) as usize;
+        let frac = rate/(buf_len as f64);
+        let mut buf = vec![0.0 as f32; buf_len];
+
         let line = line.unwrap();
+        if line.starts_with("#") {
+            continue;
+        }
+        if line.starts_with("!") {
+            let mut run_command = |command: &str| {
+                let parts = command
+                    .split(" ")
+                    .filter(|&x| !x.is_empty())
+                    .collect::<Vec<&str>>();
+                match parts.first() {
+                    Some(&name) => {
+                        match name {
+                            "bpm" => {
+                                let args = &parts[1..];
+                                if args.is_empty() {
+                                    eprintln!("Missing tempo.");
+                                }
+                                else {
+                                    bpm = args[0].parse::<f64>().unwrap();
+                                }
+                            },
+                            _ => eprintln!("Ignoring unknown command: \"{}\"", &name)
+                        }
+                    },
+                    _ => eprintln!("Ignoring empty command")
+                }
+            };
+            run_command(&line[1..]);
+            continue;
+        }
         for i in 0..buf_len {
             let t = gt + (i as f64) * 2.0 * PI/rate;  // arrr!
             buf[i] = (line.chars().enumerate().map(|(j, c)| gen_sample(t, j, c)).sum::<f64>() / 8.0) as f32;
