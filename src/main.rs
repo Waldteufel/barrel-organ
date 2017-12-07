@@ -55,6 +55,8 @@ fn main() {
     let stdin_h = stdin.lock();
     let mut stdout_h = stdout.lock();
 
+    let first_tempo = bpm;
+    let mut composer_tempo = f64::NAN;
     let mut gt = 0.0;
 
     for line in stdin_h.lines() {
@@ -82,7 +84,14 @@ fn main() {
                                     eprintln!("Missing tempo.");
                                 }
                                 else {
-                                    bpm = args[0].parse::<f64>().unwrap();
+                                    let tempo = args[0].parse::<f64>().unwrap();
+                                    if composer_tempo.is_nan() {
+                                        composer_tempo = tempo;
+                                    }
+                                    else {
+                                        let change_rate = tempo / composer_tempo;
+                                        bpm = first_tempo * change_rate;
+                                    }
                                 }
                             },
                             _ => eprintln!("Ignoring unknown command: \"{}\"", &name)
